@@ -1,0 +1,9 @@
+{
+  "framework": "mocha+chai",
+
+  "src_files": [
+    "lib/cache.js",
+    "tests/cache.spec.js",
+    "node_modules/chai-spies/chai-spies.js"
+  ]
+}

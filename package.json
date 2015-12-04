@@ -1,0 +1,21 @@
+{
+  "name": "cache-money",
+  "version": "1.0.0",
+  "description": "Interface for caching function calls",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "testem"
+  },
+  "keywords": [
+    "cache"
+  ],
+  "author": "David Reeve <david.thomas.reeve@gmail.com> (http://lancey.space)",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "chai-spies": "^0.7.1"
+  }
+}
