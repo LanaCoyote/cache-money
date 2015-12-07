@@ -54,9 +54,17 @@ describe('Cache object', function() {
     it( 'can be called with a function and returns a LocalCache', function() {
 
       var fnCall = cache( fn.addTwo );
-      expect( typeof fnCall ).to.be.equal( 'object' );
+      expect( fnCall.__proto__ ).to.be.equal( LocalCache.prototype );
       expect( fnCall ).to.have.property( 'call' );
       expect( fnCall ).to.have.property( 'apply' );
+
+    });
+
+    it( 'can call the function directly', function() {
+
+      expect( cache( fn.addTwo )( 2 ) ).to.be.equal( 4, "direct call did not return the right value" );
+      expect( fn.addTwo ).to.have.been.called();
+      expect( fn.addTwo ).to.have.been.called.with( 2 );
 
     });
 
@@ -199,6 +207,13 @@ describe('Cache object', function() {
 
     });
 
+    it( 'can call the bound function directly', function() {
+
+      cache = Cache$( fn.addTwo );
+      expect( cache( 2 ) ).to.be.equal( 4 );
+
+    });
+
     it( 'can call the bound function using .call()', function() {
 
       cache = Cache$( fn.addTwo );
@@ -224,20 +239,20 @@ describe('Cache object', function() {
       it( 'when calling a function with 1 argument', function() {
 
         cache = Cache$( fn.addTwo );
-        expect( cache.call( 2 ) ).to.be.equal( 4 );
-        expect( cache.call( 2 ) ).to.be.equal( 4 );
+        expect( cache( 2 ) ).to.be.equal( 4 );
+        expect( cache( 2 ) ).to.be.equal( 4 );
         expect( fn.addTwo ).to.have.been.called.exactly( 1 );
 
-        expect( cache.call( 10 ) ).to.be.equal( 12 );
-        expect( cache.call( 2 ) ).to.be.equal( 4 );
-        expect( cache.call( 10 ) ).to.be.equal( 12 );
-        expect( cache.call( 8 ) ).to.be.equal( 10 );
+        expect( cache( 10 ) ).to.be.equal( 12, "didn't return the right value with new arguments" );
+        expect( cache( 2 ) ).to.be.equal( 4 );
+        expect( cache( 10 ) ).to.be.equal( 12 );
+        expect( cache( 8 ) ).to.be.equal( 10 );
         expect( fn.addTwo ).to.have.been.called.exactly( 3 );
 
         var otherCache = Cache$( fn.mulThree );
-        expect( otherCache.call( 3 ) ).to.be.equal( 9 );
-        expect( cache.call( 3 ) ).to.be.equal( 5 );
-        expect( otherCache.call( 3 ) ).to.be.equal( 9 );
+        expect( otherCache( 3 ) ).to.be.equal( 9 );
+        expect( cache( 3 ) ).to.be.equal( 5 );
+        expect( otherCache( 3 ) ).to.be.equal( 9 );
         expect( fn.addTwo ).to.have.been.called.exactly( 4 );
         expect( fn.mulThree ).to.have.been.called.exactly( 1 );
 
