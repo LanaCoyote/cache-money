@@ -168,4 +168,190 @@ describe('Cache object', function() {
 
   });
 
+
+  describe( 'bound syntax', function() {
+
+    var cache,fn = {
+        addTwo : function( n ) { return n + 2; },
+        mulThree : function( n ) { return n * 3; },
+        concat : function( s1, s2 ) { return s1.toString() + s2.toString(); },
+        sum : function() { 
+          var sm = 0;
+          for ( var a in arguments ) sm += arguments[a];
+          return sm;
+        },
+      };
+    beforeEach(function() {
+
+      safeSpyOn( fn, 'addTwo' );
+      safeSpyOn( fn, 'mulThree' );
+      safeSpyOn( fn, 'concat' );
+      safeSpyOn( fn, 'sum' );
+
+    });
+
+    it( 'can bind to a function and returns a LocalCache object', function() {
+
+      cache = Cache$( fn.addTwo );
+
+      expect( cache.constructor ).to.be.equal( LocalCache );
+      expect( cache.fn ).to.be.equal( fn.addTwo );
+
+    });
+
+    it( 'can call the bound function using .call()', function() {
+
+      cache = Cache$( fn.addTwo );
+      expect( cache.call( 2 ) ).to.be.equal( 4 );
+
+      cache = Cache$( fn.concat );
+      expect( cache.call( "Hello,", " world!" ) ).to.be.equal( "Hello, world!" );
+
+    });
+
+    it( 'can call the bound function using .apply()', function() {
+
+      cache = Cache$( fn.addTwo );
+      expect( cache.apply( [2] ) ).to.be.equal( 4 );
+
+      cache = Cache$( fn.concat );
+      expect( cache.apply( ["Hello,", " world!" ] ) ).to.be.equal( "Hello, world!" );
+
+    });
+
+    describe( 'properly caches results', function() {
+
+      it( 'when calling a function with 1 argument', function() {
+
+        cache = Cache$( fn.addTwo );
+        expect( cache.call( 2 ) ).to.be.equal( 4 );
+        expect( cache.call( 2 ) ).to.be.equal( 4 );
+        expect( fn.addTwo ).to.have.been.called.exactly( 1 );
+
+        expect( cache.call( 10 ) ).to.be.equal( 12 );
+        expect( cache.call( 2 ) ).to.be.equal( 4 );
+        expect( cache.call( 10 ) ).to.be.equal( 12 );
+        expect( cache.call( 8 ) ).to.be.equal( 10 );
+        expect( fn.addTwo ).to.have.been.called.exactly( 3 );
+
+        var otherCache = Cache$( fn.mulThree );
+        expect( otherCache.call( 3 ) ).to.be.equal( 9 );
+        expect( cache.call( 3 ) ).to.be.equal( 5 );
+        expect( otherCache.call( 3 ) ).to.be.equal( 9 );
+        expect( fn.addTwo ).to.have.been.called.exactly( 4 );
+        expect( fn.mulThree ).to.have.been.called.exactly( 1 );
+
+      });
+
+    });
+
+  });
+
+
+  describe( 'stress test #1', function() {
+
+    var fn = {
+      addTwo: function( n ) { return n + 2; }
+    };
+    beforeEach( function() {
+
+      safeSpyOn( fn, 'addTwo' );
+
+    });
+
+    it( 'only calls a function once if it has a result already', function() {
+
+      var cache = Cache$( fn.addTwo );
+
+      for( var i = 0; i < 100; ++i ) {
+        expect( cache.call( 2 ) ).to.be.equal( 4 );
+      }
+
+      expect( fn.addTwo ).to.have.been.called.exactly( 1 );
+
+    });
+
+    it( 'calls a function once for each argument passed into it', function() {
+
+      var cache = Cache$( fn.addTwo );
+
+      for ( var i = 0; i < 100; ++i ) {
+        expect( cache.call( i ) ).to.be.equal( i + 2 ); 
+      }
+
+      expect( fn.addTwo ).to.have.been.called.exactly( i );
+
+    });
+
+    it( 'works as expected with random inputs', function() {
+
+      var cache = Cache$( fn.addTwo );
+      var args = [];
+
+      for ( var i = 0; i < 2000; ++i ) {
+        var rand = Math.round( Math.random() * 100 );
+        if ( args.indexOf( rand ) === -1 ) args.push( rand );
+        cache.call( rand );
+      }
+
+      expect( fn.addTwo ).to.have.been.called.exactly( args.length );
+
+    });
+
+  });
+
+  
+  describe( 'Extended Functionality', function() {
+
+    var cache,fn = {
+        addTwo : function( n ) { return n + 2; },
+        mulThree : function( n ) { return n * 3; },
+        concat : function( s1, s2 ) { return s1.toString() + s2.toString(); },
+        sum : function() { 
+          var sm = 0;
+          for ( var a in arguments ) sm += arguments[a];
+          return sm;
+        },
+      };
+    beforeEach( function() {
+
+      safeSpyOn( fn, 'addTwo' );
+      safeSpyOn( fn, 'mulThree' );
+      safeSpyOn( fn, 'concat' );
+      safeSpyOn( fn, 'sum' );
+
+    });
+
+    it( 'can take a timeout parameter', function() {
+
+      cache = Cache$( { timeout: 10000 } );
+      expect( cache ).to.have.property( 'timeout' );
+      expect( cache.timeout ).to.be.equal( 10000 );
+
+    });
+
+    it( 'only stores data for the duration of its timeout', function( done ) {
+
+      cache = Cache$( { timeout: 500 } );
+      
+      cache( fn.addTwo ).call( 10 );
+      cache( fn.addTwo ).call( 10 );
+      expect( fn.addTwo ).to.have.been.called.exactly( 1 );
+
+      setTimeout( function() {
+
+        expect( cache( fn.addTwo ).call( 10 ) ).to.be.equal( 12 );
+        expect( fn.addTwo ).to.have.been.called.exactly( 2 );
+
+        expect( cache( fn.addTwo ).call( 10 ) ).to.be.equal( 12 );
+        expect( fn.addTwo ).to.have.been.called.exactly( 2 );
+
+        done();
+
+      }, 1000 );
+
+    });
+
+  });
+
 });
